@@ -1,14 +1,19 @@
 import pandas as pd
 import yfinance as yf
+from datetime import datetime
 
 class TradingEngine:
 
 	def __init__(self, df):
+		self.df = df
 		#setup equity
 		self.init_equity()
 
+	#will run daily 
 	def forwardtest(self, df):
-		...
+		#get today's date
+		#check database for new entries
+		# run similar trading process as below (may want to create function to reduce repetition
 
 	#setup historical prices dataframe that adds row daily for fast lookup in equity 
 	def backtest(self, df):
@@ -20,19 +25,17 @@ class TradingEngine:
 
 		for i, data in df.iterrows():
 			if date != data['Date']:
+				equity[date] = base
 				date = data['Date']
-				base = equity[date - 1]
 
 				#load day's trades 
 			ticker = data['Ticker']
 
 			#recalculate equity
 			for holding, info in holdings:
-				#not correct: math needs to be fixed to account for daily price change as well as average price
-				dif = yf.download(ticker, date)['Close']
-				change = info['Pct'] * dif / info['Price']
-				base += change
-				
+				new = yf.download(ticker, date)['Close']
+				change = info['Pct'] * new / info['Price'] if new > info['Price'] else -1 * info['Pct'] * new / info['Price']
+				base += change	
 
 			#check new trades
 			if data['Buy']:
@@ -43,12 +46,11 @@ class TradingEngine:
 
 					holdings[ticker]["Pct"] = holdings[ticker]["Pct"] + data['Percent'] * base
 					
-					
 				else:
 					holdings[ticker] = {"Pct":base * data["Percent"], "Price": yf.download(ticker, date)['Close']}
 
 			elif data['Sell']:
-						holdings[ticker]["Pct"] -= (base * data['Percent']) #all that is needed here?
+						holdings[ticker]["Pct"] -= (base * data['Percent']) 
 
 			else:
 				self.log(f'Buy/Sell issue at row {i}')
