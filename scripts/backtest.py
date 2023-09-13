@@ -3,11 +3,17 @@ import yfinance as yf
 from datetime import datetime
 
 class TradingEngine:
+	#may not need to be in a class, this is just a collection of functions that will be called, new class instance would need to be created every night...
 
 	def __init__(self, df):
 		self.df = df
 		#setup equity
 		self.init_equity()
+
+	def tradeLogic():
+		...
+		#fucntion to be shared between forward and backward test
+		#or combine the functions and generalize
 
 	#will run daily 
 	def forwardtest(self, df):
