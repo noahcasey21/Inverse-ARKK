@@ -11,7 +11,8 @@ class TradingEngine:
 
 	#will run daily 
 	def forwardtest(self, df):
-		#get today's date
+		date = datetime.today().strftime('%Y-%m-%d')
+		
 		#check database for new entries
 		# run similar trading process as below (may want to create function to reduce repetition
 
