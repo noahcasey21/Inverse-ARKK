@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <meta charset="UTF-8">
+        <link rel="stylesheet" href="styles.css">
         <title>Inverse ARKK Home</title>
     </head>
 
@@ -17,7 +18,15 @@
         </header>
 
         <main>
-            
+            <!--May use a python script to visualize data instead of js-->
+            <div class="graphcontainer">
+                <script src="functions.js">
+                    //function to create line chart
+                </script>
+            </div>
+
+            <div style="width: 800px;"><canvas id="graphcontainer"></canvas></div>
+            <script type="module" src="functions.js"></script>
         </main>
 
 
