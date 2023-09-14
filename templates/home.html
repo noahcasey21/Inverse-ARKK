@@ -3,6 +3,11 @@
     <head>
         <meta charset="UTF-8">
         <link rel="stylesheet" href="styles.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!--Chart.js import-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+
         <title>Inverse ARKK Home</title>
     </head>
 
@@ -18,18 +23,20 @@
         </header>
 
         <main>
-            <!--May use a python script to visualize data instead of js-->
-            <div class="graphcontainer">
-                <script src="functions.js">
-                    //function to create line chart
-                </script>
-            </div>
-
-            <div style="width: 800px;"><canvas id="graphcontainer"></canvas></div>
-            <script type="module" src="functions.js"></script>
+            <!--https://towardsdatascience.com/do-this-to-make-your-website-interactive-in-minutes-c11b7495d088-->
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                  World population growth rate (%)
+                </div>
+                <div class="card-body">
+                  <canvas id="equity"></canvas>
+                </div>
+              </div>
         </main>
 
-
+        <!--Script for page-->
+        <script src="src/equity.js"></script>
     </body>
 
 </html>
