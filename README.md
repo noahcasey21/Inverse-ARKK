@@ -1,4 +1,3 @@
 # Inverse ARKK ETF
 
-The goal is to eventually create a program that pulls ARKK trades from the web and 
-uses them to create simulated opposing trades to track equity. 
+Simple website build with Flask that tracks ARKK ETF trades and demonstrates what opposing trades would look like using Yahoo Finance closing data.
