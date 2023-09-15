@@ -73,5 +73,5 @@ def scrape_table(date=None):
         tickers.add(new)
     
     arkk['Date'] = pd.to_datetime(arkk['Date'])
-    
+
     #upload to database
