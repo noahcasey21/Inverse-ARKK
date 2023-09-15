@@ -2,6 +2,31 @@ from bs4 import BeautifulSoup as BS
 import pandas as pd
 import requests
 from datetime import datetime
+import sqlite3
+
+def create_table():
+    """
+        To be executed on first startup or relaunch
+    """
+    conn = sqlite3.connect("inverse_arkk.db")
+    cursor = conn.cursor()
+
+    #remove table 
+    cursor.execute('DROP TABLE IF EXISTS TRADES')
+
+    table = """CREATE TABLE TRADES (
+                FUND CHAR(4),
+                DATE DATE NOT,
+                ACTION VARCHAR(255),
+                TICKER VARCHAR(255),
+                COMPANY VARCHAR (255),
+                SHARES INT,
+                PERCENT FLOAT,
+            );"""
+    
+    cursor.execute(table)
+    conn.close()
+
 
 def scrape_table(date=None):
     """
@@ -11,6 +36,9 @@ def scrape_table(date=None):
     if date != None:
         date = str(date.strftime('%d %b %Y')) #same format that appears in table
         date_lock = True
+
+    else:
+        create_table() #create database table as reconfiguration needed
         
     df = pd.DataFrame(columns=["Fund", "Date", "Action", "Ticker", "Company", "Shares", "Percent"])
     
@@ -75,3 +103,17 @@ def scrape_table(date=None):
     arkk['Date'] = pd.to_datetime(arkk['Date'])
 
     #upload to database
+    try:
+        # Connect to DB and create a cursor
+        conn = sqlite3.connect('inverse_arkk.db')
+        
+        arkk.to_sql('TRADES', conn, if_exists='append', index=False)
+
+    except sqlite3.Error as error:
+        f = open('db_errors.txt', 'a')
+        f.write(f'Error with uploading date = {date} data')
+        f.close()
+
+    finally:
+        if conn:
+            conn.close()
