@@ -16,7 +16,7 @@ def create_table():
 
     table = """CREATE TABLE TRADES (
                 FUND CHAR(4),
-                DATE DATE NOT,
+                DATE TEXT,
                 ACTION VARCHAR(255),
                 TICKER VARCHAR(255),
                 COMPANY VARCHAR (255),
@@ -100,8 +100,6 @@ def scrape_table(date=None):
         tickers.remove(problem)
         tickers.add(new)
     
-    arkk['Date'] = pd.to_datetime(arkk['Date'])
-
     #upload to database
     try:
         # Connect to DB and create a cursor

@@ -1,9 +1,12 @@
 import pandas as pd
 import yfinance as yf
 from datetime import datetime
+import sqlite3 
+from sqlite3 import connect 
 
 class TradingEngine:
-	#may not need to be in a class, this is just a collection of functions that will be called, new class instance would need to be created every night...
+	# may not need to be in a class, this is just a collection of functions 
+	# that will be called, new class instance would need to be created every night...
 
 	def __init__(self, df):
 		self.df = df
@@ -19,11 +22,11 @@ class TradingEngine:
 	def forwardtest(self, df):
 		date = datetime.today().strftime('%Y-%m-%d')
 		
-		#check database for new entries
+		# check database for new entries
 		# run similar trading process as below (may want to create function to reduce repetition
 
 	#setup historical prices dataframe that adds row daily for fast lookup in equity 
-	def backtest(self, df):
+	def backtest(self, df, inverse=False):
 		holdings = {} #{"SPY":{"Pct":x, "Price":y}, ...}
 		equity = pd.Series()
 
@@ -62,7 +65,6 @@ class TradingEngine:
 			else:
 				self.log(f'Buy/Sell issue at row {i}')
 
-
 	def log(self, string):
 		#log data issues to go clean
 		f = open('data_issues.txt','a')
@@ -74,4 +76,3 @@ class TradingEngine:
 		end = self.df['Date'].max()
 
 		self.equity = pd.Series(index=pd.date_range(start, end))
-
