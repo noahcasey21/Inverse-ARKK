@@ -25,6 +25,16 @@ def create_table():
             );"""
     
     cursor.execute(table)
+
+    cursor.execute('DROP TABLE IF EXISTS EQUITY')
+
+    table = """ CREATE TABLE EQUITY (
+            DATE TEXT,
+            AMOUNT FLOAT
+            );"""
+    
+    cursor.execute(table)
+    
     conn.close()
 
 

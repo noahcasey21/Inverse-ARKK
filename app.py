@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 def run_scripts():
     scrape_table(date=datetime.today)
-    #run backtest
+    #run daily trades
 
 @app.route('/')
 def home():
