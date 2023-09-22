@@ -4,6 +4,12 @@ from datetime import datetime
 import sqlite3 
 from sqlite3 import connect 
 
+"""
+	Logic toDo: 
+		- deal with sells that were bought before earliest date
+		- account for splits and dividends
+"""
+
 def tradeLogic():
 	...
 	#fucntion to be shared between forward and backward test

@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 #from scripts.backtest import sometihng
 from scripts.scraper import create_table, scrape_table
 import atexit 

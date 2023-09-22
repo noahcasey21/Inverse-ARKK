@@ -34,7 +34,17 @@ def create_table():
             );"""
     
     cursor.execute(table)
+
+    cursor.execute('DROP TABLE IF EXISTS HOLDINGS')
+
+    table = """ CREATE TABLE HOLDINGS (
+            TICKER VARCHAR,
+            PERCENT FLOAT,
+            PRICE FLOAT
+            );"""
     
+    cursor.execute(table)
+
     conn.close()
 
 
