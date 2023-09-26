@@ -2,7 +2,6 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime
 import sqlite3 
-from sqlite3 import connect 
 
 """
 	Logic toDo: 
@@ -10,58 +9,72 @@ from sqlite3 import connect
 		- account for splits and dividends
 """
 
-def tradeLogic():
-	...
-	#fucntion to be shared between forward and backward test
-	#or combine the functions and generalize
-
-#will run daily 
-def forwardtest(df):
-	date = datetime.today().strftime('%Y-%m-%d')
-	
-	# check database for new entries
-	# run similar trading process as below (may want to create function to reduce repetition 
-
-def backtest(df, inverse=False):
+def trade(inverse=False, forward=False):
 	"""
-		Mass trading to be initialized on launch. Calculates all historical equity
+		Mass trading to be initialized on launch. Calculates all historical equity or current
 
 		inverse : False is normal ARKK trades, True is Inverse ARKK trades
+		forward : False is daily trades, True will run full backtest on all data. Should only
+				be run on startup
 	"""
-	holdings = {} #{"SPY":{"Pct":x, "Price":y}, ...}
-	equity = pd.Series()
 
-	date = None
-	base = 1
+	#initializations
+	if forward:
+		#confirmed that date styles should match where needed
+		date = datetime.today().strftime('%Y-%m-%d')
+		base = equity['AMOUNT'][0]
 
-	for i, data in df.iterrows():
-		if date != data['Date']:
+		#only pull todays date trades
+		conn = sqlite3.connect('inverse_arkk.db')
+		trades = pd.read_sql_query(f"SELECT * FROM TRADES WHERE DATE = {date}", conn)
+		conn.commit()
+		equity = pd.read_sql_query(f"SELECT * FROM EQUITY WHERE DATE = {date}", conn)
+		conn.commit()
+		holdings = pd.read_sql_query(f"SELECT * FROM HOLDINGS WHERE DATE = {date}", conn)
+		conn.commit()
+		conn.close()
+
+	else:
+		base = 1
+
+		conn = sqlite3.connect('inverse_arkk.db')
+		trades = pd.read_sql_query("SELECT * FROM TRADES", conn)
+		conn.commit()
+		equity = pd.read_sql_query("SELECT * FROM EQUITY", conn)
+		conn.commit()
+		holdings = pd.read_sql_query("SELECT * FROM HOLDINGS", conn)
+		conn.commit()
+		conn.close()
+
+	for i, data in trades.iterrows():
+		if date != data['DATE']:
 			equity[date] = base
-			date = data['Date']
+			date = data['DATE']
 
 			#load day's trades 
-		ticker = data['Ticker']
+		ticker = data['TICKER']
 
 		#recalculate equity
-		for holding, info in holdings:
+		for _, info in holdings.iterrows():
+			ticker = info["TICKER"]
 			new = yf.download(ticker, date)['Close']
-			change = info['Pct'] * new / info['Price'] if new > info['Price'] else -1 * info['Pct'] * new / info['Price']
+			change = info['PERCENT'] * new / info['Price'] if new > info['Price'] else -1 * info['PERCENT'] * new / info['Price']
 			base += change	
 
 		#check new trades
 		if data['Buy']:
 			if ticker in holdings:
 				#calculate average buy
-				holdings[ticker]["Price"] = (data['Percent'] * base * yf.download(ticker, date)['Close'] + holdings[ticker]["Pct"] * holdings[ticker]["Price"]) / \
-					(holdings[ticker]["Pct"] + data['Percent'] * base)
+				holdings[ticker]["Price"] = (data['Percent'] * base * yf.download(ticker, date)['Close'] + holdings[ticker]["PERCENT"] * holdings[ticker]["Price"]) / \
+					(holdings[ticker]["PERCENT"] + data['Percent'] * base)
 
-				holdings[ticker]["Pct"] = holdings[ticker]["Pct"] + data['Percent'] * base
+				holdings[ticker]["PERCENT"] = holdings[ticker]["PERCENT"] + data['Percent'] * base
 				
 			else:
-				holdings[ticker] = {"Pct":base * data["Percent"], "Price": yf.download(ticker, date)['Close']}
+				holdings[ticker] = {"PERCENT":base * data["Percent"], "Price": yf.download(ticker, date)['Close']}
 
 		elif data['Sell']:
-					holdings[ticker]["Pct"] -= (base * data['Percent']) 
+					holdings[ticker]["PERCENT"] -= (base * data['Percent']) 
 
 		else:
 			log(f'Buy/Sell issue at row {i}')
