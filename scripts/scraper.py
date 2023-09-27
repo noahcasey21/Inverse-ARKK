@@ -39,8 +39,7 @@ def create_table():
 
     table = """ CREATE TABLE HOLDINGS (
             TICKER VARCHAR,
-            PERCENT FLOAT,
-            PRICE FLOAT
+            PERCENT FLOAT
             );"""
     
     cursor.execute(table)

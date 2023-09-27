@@ -12,7 +12,7 @@ def run_scripts():
     #run daily trades
 
 @app.route('/')
-def home():
+def home():    
     return "Hello world"
 
 #setup script scheduler
@@ -24,6 +24,7 @@ scheduler.start()
 atexit.register(lambda: scheduler.shutdown(wait=False))
 
 if __name__ == "__main__":
-    # initial startup scrape
+    #run startup scripts before pulling homepage
     scrape_table()
+    
     app.run(debug=True)

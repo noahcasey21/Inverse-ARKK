@@ -28,52 +28,65 @@ def trade(inverse=False, forward=False):
 		conn = sqlite3.connect('inverse_arkk.db')
 		trades = pd.read_sql_query(f"SELECT * FROM TRADES WHERE DATE = {date}", conn)
 		conn.commit()
-		equity = pd.read_sql_query(f"SELECT * FROM EQUITY WHERE DATE = {date}", conn)
+		equity = pd.read_sql_query(f"SELECT * FROM EQUITY ORDER BY ROWID ASC LIMIT 1", conn)
 		conn.commit()
-		holdings = pd.read_sql_query(f"SELECT * FROM HOLDINGS WHERE DATE = {date}", conn)
+		holdings = pd.read_sql_query(f"SELECT * FROM HOLDINGS", conn, index_col='TICKER')
 		conn.commit()
 		conn.close()
+
+		#batch load yf info
+		stock_info = yf.download(holdings['TICKER'].tolist(), date)['Close']
 
 	else:
 		base = 1
 
 		conn = sqlite3.connect('inverse_arkk.db')
-		trades = pd.read_sql_query("SELECT * FROM TRADES", conn)
+		trades = pd.read_sql_query("SELECT * FROM TRADES ORDER BY ROWID DESC", conn)
 		conn.commit()
 		equity = pd.read_sql_query("SELECT * FROM EQUITY", conn)
 		conn.commit()
-		holdings = pd.read_sql_query("SELECT * FROM HOLDINGS", conn)
+		holdings = pd.read_sql_query("SELECT * FROM HOLDINGS", conn, index_col='TICKER')
 		conn.commit()
 		conn.close()
+
+		date = trades['DATE'][0]
+
+		#batch load yf info
+		stock_info = yf.download(holdings['TICKER'].tolist(), start=date)['Close']
+
+	"""
+		stock_info: Ticker is column, date is index
+	"""
 
 	for i, data in trades.iterrows():
 		if date != data['DATE']:
 			equity[date] = base
 			date = data['DATE']
 
-			#load day's trades 
+		#load rows's trades 
 		ticker = data['TICKER']
 
-		#recalculate equity
-		for _, info in holdings.iterrows():
-			ticker = info["TICKER"]
-			new = yf.download(ticker, date)['Close']
-			change = info['PERCENT'] * new / info['Price'] if new > info['Price'] else -1 * info['PERCENT'] * new / info['Price']
+		#recalculate equity on currently held assets
+		for _ticker, info in holdings.iterrows():
+			pct = info[0]
+			new = stock_info[date, _ticker]
+			old = stock_info[...]
+			change = pct * new / info['PRICE'] if new > info['PRICE'] else -1 * pct * new / info['Price']
 			base += change	
 
 		#check new trades
-		if data['Buy']:
+		if 'buy' in data['ACTION'].lower():
 			if ticker in holdings:
-				#calculate average buy
+				#increase percent holding
 				holdings[ticker]["Price"] = (data['Percent'] * base * yf.download(ticker, date)['Close'] + holdings[ticker]["PERCENT"] * holdings[ticker]["Price"]) / \
 					(holdings[ticker]["PERCENT"] + data['Percent'] * base)
 
 				holdings[ticker]["PERCENT"] = holdings[ticker]["PERCENT"] + data['Percent'] * base
 				
 			else:
-				holdings[ticker] = {"PERCENT":base * data["Percent"], "Price": yf.download(ticker, date)['Close']}
+				holdings[ticker] = {"PERCENT" : base * data["PERCENT"], "PRICE" : yf.download(ticker, date)['Close']}
 
-		elif data['Sell']:
+		elif 'sell' in data['ACTION'].lower():
 					holdings[ticker]["PERCENT"] -= (base * data['Percent']) 
 
 		else:
