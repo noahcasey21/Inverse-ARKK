@@ -65,7 +65,7 @@ def trade(inverse=False, forward=False):
 				pct = info[0]
 				idx = stock_info.index.get_loc(date)
 				new = stock_info[date, _ticker]
-				old = stock_info[idx, _ticker]
+				old = stock_info[idx-1, _ticker]
 				change = pct * new / old if new > old else -1 * pct * new / old
 				base += change	
 
@@ -76,7 +76,7 @@ def trade(inverse=False, forward=False):
 		ticker = data['TICKER']
 
 		#check new trades
-		if 'buy' in data['ACTION'].lower():
+		if ('sell' in data['ACTION'].lower() if inverse else 'buy' in data['ACTION'].lower()):
 			if ticker in holdings.index:
 				#increase percent holding
 				holdings.loc[ticker] = holdings[ticker] + data['Percent'] * base
@@ -84,7 +84,7 @@ def trade(inverse=False, forward=False):
 			else:
 				holdings.loc[ticker] = base * data["Percent"]
 
-		elif 'sell' in data['ACTION'].lower() and ticker in holdings.index:
+		elif ('buy' in data['ACTION'].lower() if inverse else 'sell' in data['ACTION'].lower()) and ticker in holdings.index:
 					holdings.loc[ticker] -= (base * data['Percent']) 
 
 		else:
