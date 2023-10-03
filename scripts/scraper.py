@@ -21,8 +21,8 @@ def create_table():
                 TICKER VARCHAR(255),
                 COMPANY VARCHAR (255),
                 SHARES INT,
-                PERCENT FLOAT,
-            );"""
+                PERCENT FLOAT
+            )"""
     
     cursor.execute(table)
 
@@ -58,6 +58,7 @@ def scrape_table(date=None):
 
     else:
         create_table() #create database table as reconfiguration needed
+        date_lock = False
         
     df = pd.DataFrame(columns=["Fund", "Date", "Action", "Ticker", "Company", "Shares", "Percent"])
     
@@ -113,11 +114,22 @@ def scrape_table(date=None):
     tickers = set(arkk['Ticker'].unique())
     
     #fix .US type tickers
+    map = {}
     problems = [x for x in tickers if "." in x]
     for problem in problems:
         new = problem.split(".")[0]
+        map[problem] = new
         tickers.remove(problem)
         tickers.add(new)
+
+    #replaces issues
+    for i, info in arkk.iterrows():
+        if info['Ticker'] in map.keys():
+            arkk.iloc[i]['Ticker'] = map[info['Ticker']]
+
+    #holdings to df
+    holdings = pd.DataFrame(tickers, index=list(tickers), columns=['Percent'])
+    holdings['Percent'] = 0
     
     #upload to database
     try:
@@ -125,6 +137,7 @@ def scrape_table(date=None):
         conn = sqlite3.connect('inverse_arkk.db')
         
         arkk.to_sql('TRADES', conn, if_exists='append', index=False)
+        holdings.to_sql('HOLDINGS', conn, if_exists='replace', index=holdings.index)
 
     except sqlite3.Error as error:
         f = open('db_errors.txt', 'a')

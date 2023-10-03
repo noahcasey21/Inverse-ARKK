@@ -30,12 +30,12 @@ def trade(inverse=False, forward=False):
 		conn.commit()
 		equity = pd.read_sql_query(f"SELECT * FROM EQUITY ORDER BY ROWID ASC LIMIT 1", conn)
 		conn.commit()
-		holdings = pd.read_sql_query(f"SELECT * FROM HOLDINGS", conn, index_col='TICKER')
+		holdings = pd.read_sql_query(f"SELECT * FROM HOLDINGS", conn)
 		conn.commit()
 		conn.close()
 
 		#batch load yf info
-		stock_info = yf.download(holdings['TICKER'].tolist(), date)['Close']
+		stock_info = yf.download(holdings.index.tolist(), date)['Close']
 
 	else:
 		base = 1
@@ -45,14 +45,14 @@ def trade(inverse=False, forward=False):
 		conn.commit()
 		equity = pd.read_sql_query("SELECT * FROM EQUITY", conn)
 		conn.commit()
-		holdings = pd.read_sql_query("SELECT * FROM HOLDINGS", conn, index_col='TICKER')
+		holdings = pd.read_sql_query("SELECT * FROM HOLDINGS", conn)
 		conn.commit()
 		conn.close()
 
 		date = trades['DATE'][0]
 
 		#batch load yf info
-		stock_info = yf.download(holdings['TICKER'].tolist(), start=date)['Close']
+		stock_info = yf.download(holdings.index.tolist(), start=date)['Close']
 
 	"""
 		stock_info: Ticker is column, date is index
@@ -79,13 +79,13 @@ def trade(inverse=False, forward=False):
 		if ('sell' in data['ACTION'].lower() if inverse else 'buy' in data['ACTION'].lower()):
 			if ticker in holdings.index:
 				#increase percent holding
-				holdings.loc[ticker] = holdings[ticker] + data['Percent'] * base
+				holdings.loc[ticker] = holdings[ticker] + data['PERCENT'] * base
 				
 			else:
-				holdings.loc[ticker] = base * data["Percent"]
+				holdings.loc[ticker] = base * data["PERCENT"]
 
 		elif ('buy' in data['ACTION'].lower() if inverse else 'sell' in data['ACTION'].lower()) and ticker in holdings.index:
-					holdings.loc[ticker] -= (base * data['Percent']) 
+					holdings.loc[ticker] -= (base * data['PERCENT']) 
 
 		else:
 			log(f'Buy/Sell issue at row {i} (may be sell before buy due to time constraints)')
