@@ -139,7 +139,7 @@ def scrape_table(date=None):
         arkk.to_sql('TRADES', conn, if_exists='append', index=False)
         holdings.to_sql('HOLDINGS', conn, if_exists='replace', index=holdings.index)
 
-    except sqlite3.Error as error:
+    except sqlite3.Error:
         f = open('db_errors.txt', 'a')
         f.write(f'Error with uploading date = {date} data')
         f.close()
