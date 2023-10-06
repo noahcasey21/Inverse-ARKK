@@ -45,14 +45,17 @@ def trade(inverse=False, forward=False):
 		conn.commit()
 		equity = pd.read_sql_query("SELECT * FROM EQUITY", conn)
 		conn.commit()
-		holdings = pd.read_sql_query("SELECT * FROM HOLDINGS", conn)
+		holdings = pd.read_sql_query("SELECT * FROM HOLDINGS", conn, index_col="Holdings")
 		conn.commit()
 		conn.close()
 
 		date = trades['DATE'][0]
+		start = date
 
 		#batch load yf info
-		stock_info = yf.download(holdings.index.tolist(), start=date)['Close']
+		#drop holdings no longer listed on yfinance
+		holdings.drop(['SRNG', 'SGFY', 'WORK', 'BLI', 'XLNX', 'TWTR', 'FB'], inplace=True)
+		stock_info = yf.download(holdings.index.tolist(), start=start, repair=True)['Close']
 
 	"""
 		stock_info: Ticker is column, date is index
@@ -79,10 +82,13 @@ def trade(inverse=False, forward=False):
 		if ('sell' in data['ACTION'].lower() if inverse else 'buy' in data['ACTION'].lower()):
 			if ticker in holdings.index:
 				#increase percent holding
-				holdings.loc[ticker] = holdings[ticker] + data['PERCENT'] * base
+				holdings.loc[ticker] = holdings.loc[ticker] + data['PERCENT'] * base
 				
 			else:
+				#ticker not in holdings
 				holdings.loc[ticker] = base * data["PERCENT"]
+				stock_info = pd.concat([stock_info, yf.download(ticker, start=start, repair=True)["Close"]])
+
 
 		elif ('buy' in data['ACTION'].lower() if inverse else 'sell' in data['ACTION'].lower()) and ticker in holdings.index:
 					holdings.loc[ticker] -= (base * data['PERCENT']) 

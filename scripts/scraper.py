@@ -128,7 +128,7 @@ def scrape_table(date=None):
             arkk.iloc[i]['Ticker'] = map[info['Ticker']]
 
     #holdings to df
-    holdings = pd.DataFrame(tickers, index=list(tickers), columns=['Percent'])
+    holdings = pd.DataFrame(tickers, columns=['Holdings'])
     holdings['Percent'] = 0
     
     #upload to database
