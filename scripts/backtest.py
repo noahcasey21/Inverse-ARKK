@@ -61,19 +61,31 @@ def trade(inverse=False, forward=False):
 		stock_info: Ticker is column, date is index
 	"""
 
+	reps = {} # {ticker : percentage} to be used when yf can't load correct date
+
 	for i, data in trades.iterrows():
 		if date != data['DATE']:
 			#recalculate equity on currently held assets
 			for _ticker, info in holdings.iterrows():
-				pct = info[0]
-				idx = stock_info.index.get_loc(date)
-				new = stock_info[date, _ticker]
-				old = stock_info[idx-1, _ticker]
-				change = pct * new / old if new > old else -1 * pct * new / old
-				base += change	
+				if holdings[_ticker] != 0:
+					pct = info[0]
+					idx = stock_info.index.get_loc(date)
+					new = stock_info[date, _ticker]
+					old = stock_info[idx-1, _ticker]
+					change = pct * new / old if new > old else -1 * pct * new / old
+					base += change	
 
 			equity[date] = base
 			date = data['DATE']
+
+			#attempt to pull info for failed stocks
+			for _ticker, _percent in reps.items():
+				try:
+					stock_info = pd.concat([stock_info, yf.download(_ticker, start=start, repair=True)["Close"]])
+					holdings.loc[_ticker] = base * _percent
+					reps.pop(_ticker)
+				except KeyError:
+					continue
 
 		#load rows's trades 
 		ticker = data['TICKER']
@@ -86,9 +98,11 @@ def trade(inverse=False, forward=False):
 				
 			else:
 				#ticker not in holdings
-				holdings.loc[ticker] = base * data["PERCENT"]
-				stock_info = pd.concat([stock_info, yf.download(ticker, start=start, repair=True)["Close"]])
-
+				try: 
+					stock_info = pd.concat([stock_info, yf.download(ticker, start=start, repair=True)["Close"]])
+					holdings.loc[ticker] = base * data["PERCENT"]
+				except KeyError:
+					reps[ticker] = data['Percent']
 
 		elif ('buy' in data['ACTION'].lower() if inverse else 'sell' in data['ACTION'].lower()) and ticker in holdings.index:
 					holdings.loc[ticker] -= (base * data['PERCENT']) 
